@@ -30,11 +30,3 @@ jobs:
 
       - name: Logout from DockerHub
         run: docker logout
-  trigger-redeploy:
-    runs-on: ubuntu-latest
-    needs: build
-
-    steps:
-      - name: Trigger redeploy webhook
-        run: |
-          curl ${{ secrets.RENDER_REDEPLOY_HOOK }}
