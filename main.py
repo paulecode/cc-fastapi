@@ -33,7 +33,9 @@ async def predict(file: UploadFile):
 async def predictWav(file: UploadFile):
     print("Received file in wav")
     y, sr = librosa.load(file.file)
+    print("File loaded in librosa")
 
     rms = librosa.feature.rms(y=y)
 
+    print("rms calculated")
     return {"rms": rms.flatten().tolist()}
