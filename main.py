@@ -1,7 +1,8 @@
 from helper.chord_extract import chord_extract
 from helper.midi_processor import midi_preprocess
-
+import librosa
 from fastapi import FastAPI, UploadFile
+from fastapi.responses import JSONResponse
 
 from helper.note_name import get_note_name
 
@@ -14,8 +15,6 @@ def read_root():
 
 
 def preprocessFile(file: UploadFile):
-    print(file.content_type)
-
     note_df, meta_df = midi_preprocess(file)
     print("Done processing")
     note_df = get_note_name(note_df)
@@ -24,7 +23,17 @@ def preprocessFile(file: UploadFile):
     return chord_df
 
 
-@app.post("/predict")
+@app.post("/predictMidi")
 async def predict(file: UploadFile):
     chord_df = preprocessFile(file)
-    return {"chords": chord_df.to_dict()}
+
+    return {"chords": chord_df.reset_index().to_dict(orient="records")}
+
+@app.post("/predictWav")
+async def predictWav(file: UploadFile):
+
+    y, sr = librosa.load(file.file)
+
+    rms = librosa.feature.rms(y=y)
+
+    return {"rms": rms.flatten().tolist()}

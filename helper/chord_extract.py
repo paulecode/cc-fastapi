@@ -2,7 +2,7 @@ import pandas as pd
 from music21 import chord
 
 
-def chord_extract(df: pd.DataFrame) -> pd.DataFrame:
+def chord_extract(df: pd.DataFrame):
     """
     Extracts chords from a dataframe of notes
     """
@@ -19,6 +19,8 @@ def chord_extract(df: pd.DataFrame) -> pd.DataFrame:
 
     chord_df["root"] = chord_df["chord"].apply(lambda x: chord.Chord(x).root().name)
 
-    print(chord_df)
+    chord_df = chord_df
+
+    # print(chord_df.reset_index())
 
     return chord_df
