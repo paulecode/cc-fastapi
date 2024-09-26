@@ -31,7 +31,7 @@ async def predict(file: UploadFile):
 
 @app.post("/predictWav")
 async def predictWav(file: UploadFile):
-
+    print("Received file in wav")
     y, sr = librosa.load(file.file)
 
     rms = librosa.feature.rms(y=y)
