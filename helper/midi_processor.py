@@ -1,3 +1,4 @@
+from io import BytesIO
 import mido
 import os
 
@@ -5,9 +6,11 @@ from fastapi import UploadFile
 import pandas as pd
 
 
-def midi_preprocess(file: UploadFile):
+def midi_preprocess(file: bytes):
     print("Got here")
-    mid = mido.MidiFile(file=file.file)
+    midi_file = BytesIO(file)
+
+    mid = mido.MidiFile(file=midi_file)
 
     meta_data_list = []
     note_list = []
