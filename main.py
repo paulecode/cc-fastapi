@@ -1,4 +1,5 @@
 import io
+import os
 import pickle
 
 import httpx
@@ -12,6 +13,8 @@ from fastapi import FastAPI, File, Form, Response, UploadFile, BackgroundTasks
 from helper.note_name import get_note_name
 
 ml_models = {}
+
+NEXT_URL = os.environ.get("NEXT_PUBLIC_API_URL", "http://localhost:3000")
 
 
 async def lifespan(app: FastAPI):
@@ -59,7 +62,7 @@ def midiBGTASK(file: bytes, userId: int, filename: str | None):
     genre = ml_models["form_midi"].predict(X)
 
     response = httpx.post(
-        "http://localhost:3000/api/postMidiResult",
+        f"{NEXT_URL}/api/postMidiResult",
         json={
             "meta": {"userId": userId, "filename": filename},
             "visualization": {
@@ -81,6 +84,7 @@ async def predict(
 ):
     file_content = await file.read()
     filename = file.filename
+    print("File received: ", filename)
     background_tasks.add_task(midiBGTASK, file_content, userId, filename)
 
     return Response(status_code=200)
@@ -96,7 +100,7 @@ def wavBGTASK(file: bytes, filename: str | None, userId: int):
         genre = ml_models["form_wav"].predict(X)
 
     response = httpx.post(
-        "http://localhost:3000/api/postWavResult",
+        f"{NEXT_URL}/api/postWavResult",
         json={
             "meta": {"filename": filename, "userId": userId},
             "visualization": {
@@ -114,6 +118,7 @@ async def predictWav(
 ):
     file_content = await file.read()
     filename = file.filename
+    print("File received: ", filename)
     background_tasks.add_task(wavBGTASK, file_content, filename, userId)
 
     return Response(status_code=200)
