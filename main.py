@@ -42,6 +42,15 @@ def read_root():
 
 
 def chordProcess(df: pd.DataFrame):
+    """
+    Process a DataFrame of MIDI data using mido to extract chord information.
+
+    Args:
+        df (pd.DataFrame): DataFrame containing MIDI data.
+
+    Returns:
+        pd.DataFrame: DataFrame containing chord information.
+    """
     print("Done processing")
     note_df = get_note_name(df)
     chord_df = chord_extract(df)
@@ -50,6 +59,14 @@ def chordProcess(df: pd.DataFrame):
 
 
 def midiBGTASK(file: bytes, userId: int, filename: str | None):
+    """
+    Background task for processing MIDI files and sending results back to nextjs.
+
+    Args:
+        file (bytes): MIDI file content.
+        userId (int): ID of the user who uploaded the file.
+        filename (str | None): Name of the file.
+    """
     note_df, _ = midi_preprocess(file)
     chord_df = chordProcess(note_df)
 
@@ -82,6 +99,17 @@ async def predict(
     file: UploadFile = File(...),
     userId: int = Form(...),
 ):
+    """
+    Endpoint to handle MIDI uploads and start background processing.
+
+    Args:
+        background_tasks (BackgroundTasks): FastAPI background tasks manager.
+        file (UploadFile): Uploaded MIDI file.
+        userId (int): ID of the user.
+
+    Returns:
+        Response: HTTP response with status code 200.
+    """
     file_content = await file.read()
     filename = file.filename
     print("File received: ", filename)
@@ -90,7 +118,33 @@ async def predict(
     return Response(status_code=200)
 
 
+def trim_audio(y: np.ndarray, sr: int, start_time: int, end_time: int) -> np.ndarray:
+    """
+    Trim wav file
+
+    Args:
+        y (np.ndarray): Audio time series.
+        sr (int): Sampling rate of the audio.
+        start_time (int): Start time in seconds.
+        end_time (int): End time in seconds.
+
+    Returns:
+        np.ndarray: Trimmed audio signal.
+    """
+    start_at = int(start_time * sr)
+    stop_at = int(end_time * sr)
+    return y[start_at:stop_at]
+
+
 def wavBGTASK(file: bytes, filename: str | None, userId: int):
+    """
+    Background task for processing WAV files and sending results to the Next APi.
+
+    Args:
+        file (bytes): WAV file content.
+        filename (str | None): Name of the file.
+        userId (int): ID of user who uploaded the file.
+    """
     with io.BytesIO(file) as f:
         y, sr = librosa.load(f)
         rms = librosa.feature.rms(y=y)
@@ -116,6 +170,14 @@ def wavBGTASK(file: bytes, filename: str | None, userId: int):
 async def predictWav(
     background_tasks: BackgroundTasks, file: UploadFile, userId: int = Form(...)
 ):
+    """
+    Endpoint to handle WAV file uploads and start background processing.
+
+    Args:
+        background_tasks (BackgroundTasks): FastAPI background tasks manager.
+        file (UploadFile): Uploaded WAV file.
+        userId (int): ID of the user.
+    """
     file_content = await file.read()
     filename = file.filename
     print("File received: ", filename)
